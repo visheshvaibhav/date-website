@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Quiz</title>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- AOS Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fce4ec 0%, #fff1f4 50%, #fce4ec 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 20px rgba(216, 27, 96, 0.1);
+            margin: 20px;
+            display: none;
+        }
+
+        .quiz-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .welcome-screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .score-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .score-screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            color: #d81b60;
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .question {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #fce4ec;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        /* Image option styles */
+        .option.image-option {
+            padding: 10px;
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option.image-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .option.image-option:hover img {
+            transform: scale(1.05);
+        }
+
+        .option.image-option.selected img {
+            transform: scale(1.05);
+        }
+
+        .option.image-option::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(216, 27, 96, 0);
+            transition: background-color 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .option.image-option.selected::after {
+            background: rgba(216, 27, 96, 0.3);
+        }
+
+        .option.image-option:hover::after {
+            background: rgba(216, 27, 96, 0.1);
+        }
+
+        /* Grid layout for image options */
+        .options.image-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 600px) {
+            .options.image-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option:hover {
+            border-color: #d81b60;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(216, 27, 96, 0.1);
+        }
+
+        .option.selected {
+            background: #d81b60;
+            color: white;
+            border-color: #d81b60;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #d81b60, #e91e63);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: inline-block;
+            font-family: 'Dancing Script', cursive;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(216, 27, 96, 0.2);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #fce4ec;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(45deg, #d81b60, #e91e63);
+            transition: width 0.3s ease;
+        }
+
+        .score-animation {
+            font-size: 4rem;
+            color: #d81b60;
+            margin: 30px 0;
+            font-family: 'Dancing Script', cursive;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes celebrate {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            color: #666;
+        }
+
+        .welcome-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin: 20px 0;
+            color: #666;
+        }
+
+        /* Question image styles */
+        .question-image-container {
+            margin: 20px auto;
+            max-width: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(216, 27, 96, 0.1);
+        }
+
+        .question-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 400px;
+            object-fit: contain;
+        }
+
+        /* Adjust spacing for image questions */
+        .question-with-image {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div class="welcome-screen active">
+            <h1>Welcome to Our Love Quiz!</h1>
+            <p class="welcome-text">
+                Before you see your special invitation, let me see if you deserve it!
+                Answer these 10 questions about us.
+                Score 8/10 to unlock your surprise! ❤️<br>
+                I love you Kitty ❤️🐈
+            </p>
+            <button class="button" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Container -->
+        <div class="quiz-container">
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
+            <h1>Question <span id="questionNumber">1</span></h1>
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <button class="button" onclick="nextQuestion()" id="nextBtn">Next Question</button>
+        </div>
+
+        <!-- Score Screen -->
+        <div class="score-screen">
+            <h1>Quiz Complete!</h1>
+            <div class="score-animation" id="scoreDisplay"></div>
+            <p class="message" id="resultMessage"></p>
+            <div id="redirectMessage" style="display: none;">
+                <p class="message">Now, here's your invitation...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize AOS
+        AOS.init();
+
+        // Quiz questions - Example with all types of questions
+        const questions = [{
+                question: "What was the first movi/series we watched together on call?",
+                options: ["College Romace", "Sanam Teri Kasam", "365 Days", "Fifty Shades of Grey"],
+                correct: 0,
+                type: "text"
+            },
+            {
+                question: "Which of these is my favourite picture of you?",
+                options: [
+                    "images/ques-2/fav-0.png",
+                    "images/ques-2/fav-1.png",
+                    "images/ques-2/fav-2.png",
+                    "images/ques-2/fav-4.png"
+                ],
+                correct: 0,
+                type: "image"
+            },
+            {
+                question: "Where was this ordered from?",
+                questionImage: "images/ques-3/mom-0.png",
+                options: [
+                    "Momo House",
+                    "Grill inn",
+                    "Momo Delight",
+                    "You brought it home from outside"
+                ],
+                correct: 2,
+                type: "image-question"
+            },
+            {
+                question: "What color were you wearing when we first met in August 2024?",
+                options: ["Red", "Blue", "Green", "Maroon"],
+                correct: 3,
+                type: "text"
+            },
+            {
+                question: "What pizza are you eating here?",
+                questionImage: "images/ques-5/piz-0.png",
+                options: [
+                    "Pasta Pizza",
+                    "Pizza Mania",
+                    "Farmhouse",
+                    "Pepperoni"
+                ],
+                correct: 2,
+                type: "image-question"
+            },
+            {
+                question: "When did we eat this?",
+                questionImage: "images/ques-6/fries-0.jpg",
+                options: [
+                    "February 2024 - Some Place",
+                    "May 2022 - 90s Cafe",
+                    "May 2022 - Karavas",
+                    "August 2024 - 90s Cafe Chapter 2"
+                ],
+                correct: 1,
+                type: "image-question"
+            },
+            {
+                question: "What is my favourite nickname for you?",
+                options: ["Keerti", "Kitty", "Pagal Aurat", "Billi"],
+                correct: 2,
+                type: "text"
+            },
+            {
+                question: "Which of these is our Pablo? (Identify our dog😡)",
+                options: [
+                    "images/ques-7/pug-0.jpg",
+                    "images/ques-7/pug-1.jpg",
+                    "images/ques-7/pug-2.jpeg",
+                    "images/ques-7/pug-3.png"
+                ],
+                correct: 2,
+                type: "image"
+            },
+            {
+                question: "What do I love the most about you?",
+                options: ["Smile", "Face", "Eyes", "Catness"],
+                correct: 3,
+                type: "text"
+            },
+            {
+                question: "What am I pursuing from IU University of Applied Sciences?",
+                options: ["BCA", "B.Sc in Applied AI", "B.Sc in Computer Science", "BCA in Computers"],
+                correct: 1,
+                type: "text"
+            },
+            // Add more questions here
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        function startQuiz() {
+            document.querySelector('.welcome-screen').classList.remove('active');
+            document.querySelector('.quiz-container').classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestion < questions.length) {
+                const question = questions[currentQuestion];
+                document.getElementById('questionNumber').textContent = currentQuestion + 1;
+
+                // Handle question display based on type
+                const questionElement = document.getElementById('question');
+                if (question.type === 'image-question') {
+                    questionElement.innerHTML = `
+                        <div class="question-image-container">
+                            <img src="${question.questionImage}" alt="Question Image" class="question-image">
+                        </div>
+                        <div class="question-with-image">${question.question}</div>
+                    `;
+                } else {
+                    questionElement.textContent = question.question;
+                }
+
+                const optionsContainer = document.getElementById('options');
+                // Add image-grid class only for image options
+                optionsContainer.className = `options ${question.type === 'image' ? 'image-grid' : ''}`;
+
+                const optionsHtml = question.options.map((option, index) => {
+                    if (question.type === 'image') {
+                        return `
+                            <div class="option image-option" onclick="selectOption(${index})">
+                                <img src="${option}" alt="Option ${index + 1}">
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="option" onclick="selectOption(${index})">${option}</div>
+                        `;
+                    }
+                }).join('');
+
+                optionsContainer.innerHTML = optionsHtml;
+                updateProgressBar();
+            }
+        }
+
+        function selectOption(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => option.classList.remove('selected'));
+            options[index].classList.add('selected');
+            selectedOption = index;
+        }
+
+        function updateProgressBar() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.querySelector('.progress').style.width = `${progress}%`;
+        }
+
+        function nextQuestion() {
+            if (selectedOption === null) {
+                alert('Please select an answer!');
+                return;
+            }
+
+            if (selectedOption === questions[currentQuestion].correct) {
+                score++;
+            }
+
+            selectedOption = null;
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.querySelector('.quiz-container').classList.remove('active');
+            document.querySelector('.score-screen').classList.add('active');
+
+            const percentage = (score / questions.length) * 100;
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const resultMessage = document.getElementById('resultMessage');
+            const redirectMessage = document.getElementById('redirectMessage');
+
+            // Animate score counting up
+            let currentScore = 0;
+            const interval = setInterval(() => {
+                scoreDisplay.textContent = `${currentScore}%`;
+                if (currentScore >= percentage) {
+                    clearInterval(interval);
+
+                    // Show appropriate message
+                    if (percentage >= 80) {
+                        resultMessage.textContent = "Amazing! You know us so well! ❤️";
+                        redirectMessage.style.display = 'block';
+                        // Set quiz passed in session storage
+                        sessionStorage.setItem('quizPassed', 'true');
+                        // Redirect after 3 seconds
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 3000);
+                    } else {
+                        resultMessage.textContent = "Almost there! Try again to unlock your surprise! 💝";
+                        setTimeout(() => {
+                            location.reload();
+                        }, 3000);
+                    }
+                }
+                currentScore++;
+            }, 30);
+        }
+    </script>
+</body>
+
+</html>
